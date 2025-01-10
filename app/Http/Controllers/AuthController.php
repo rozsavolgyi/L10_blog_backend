@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
 class AuthController extends BaseController
@@ -43,5 +44,26 @@ class AuthController extends BaseController
         ];
 
         return $this->sendResponse($response,'Sikeres regisztáció!',201);
+    }
+
+    public function login(Request $request){
+        if (Auth::attempt(['email'=> $request->email,
+        'password'=>$request->password])) {
+            $user=Auth::user();
+            $response=[
+                'name'=>$user->name,
+                'token'=>$user->createToken('Secret')->plainTextToken,
+                'id'=>$user->id,
+                'role'=>$user->role
+            ];
+            //dd('ok');
+            return $this->sendResponse($response,'Sikeres bejelentkezés!');
+        }else {
+            return $this->sendError('',['error'=>'Sikertelen bejelnetkezés!'],401);
+        }
+    }
+    public function logout(){
+        auth()->user()->tokens()->delete();
+        return $this->sendResponse('','Sikeres kijelentkezés!');
     }
 }
